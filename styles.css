@@ -183,7 +183,7 @@ body.hot .knob-wrap {
 #site-title h1,
 #site-title #site-subtitle {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: default;
   transition: color 0.3s ease;
 }
 
@@ -225,109 +225,6 @@ body.hot .knob-wrap {
   text-transform: none;
   text-align: right;
   white-space: nowrap;
-}
-
-body:not(.archive-open) #site-title:hover h1,
-body:not(.archive-open) #site-title:hover #site-subtitle,
-body.about-open #site-title h1,
-body.about-open #site-title #site-subtitle {
-  color: #bababa;
-}
-
-#about-pop {
-  position: fixed;
-  inset: 0;
-  z-index: 6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8vh var(--margin);
-  background: rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  pointer-events: auto;
-}
-
-#about-pop[hidden] {
-  display: none;
-}
-
-#about-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  width: min(720px, 100%);
-}
-
-#about-close {
-  width: var(--btn);
-  height: var(--btn);
-  padding: 0;
-  border: none;
-  background: none;
-  color: #ffffff;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-#about-close svg {
-  width: 22px;
-  height: 22px;
-  display: block;
-}
-
-#about-card {
-  box-sizing: border-box;
-  width: 100%;
-  max-height: 78vh;
-  overflow: auto;
-  padding: clamp(32px, 5vw, 56px);
-  border: 1px solid #000000;
-  border-radius: 28px;
-  background: #ffffff;
-  color: #000000;
-  text-align: left;
-}
-
-.about-head {
-  display: inline-block;
-  margin: 0 0 22px;
-  font: 600 15px/1.35 "Noto Sans KR", sans-serif;
-  letter-spacing: 0.02em;
-}
-
-.about-ko {
-  font: 600 clamp(14px, 1.6vw, 17px)/1.75 "Noto Sans KR", sans-serif;
-  letter-spacing: -0.01em;
-}
-
-.about-ko p,
-.about-en p {
-  margin: 0;
-}
-
-.about-ko p + p {
-  margin-top: 0.7em;
-}
-
-.about-en {
-  margin-top: 34px;
-  font: 400 clamp(12px, 1.35vw, 14px)/1.75 "SF Mono", "Menlo", "Consolas", monospace;
-  letter-spacing: 0.08em;
-}
-
-.about-en p + p {
-  margin-top: 0.85em;
-}
-
-body.about-open #view,
-body.about-open #frame-grid,
-body.about-open #slider-dock,
-body.about-open #circle-actions,
-body.about-open #judgment-code {
-  filter: blur(14px);
 }
 
 #judgment-code {
@@ -438,104 +335,6 @@ body.about-open #judgment-code {
   display: block;
 }
 
-#mail-pop {
-  --mail-w: min(420px, calc(100vw - 2 * var(--margin)));
-  position: fixed;
-  right: max(12px, var(--margin));
-  bottom: max(12px, var(--margin));
-  z-index: 6;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: var(--mail-w);
-  max-width: calc(100vw - 24px);
-  min-height: 0;
-  padding: 28px 28px 32px;
-  border-radius: clamp(12px, 1.6vw, 24px);
-  background: #000000;
-  color: #ffffff;
-  pointer-events: auto;
-}
-
-#mail-pop[hidden] {
-  display: none;
-}
-
-#mail-pop p {
-  margin: 0 0 18px;
-  font: clamp(10px, 1.05vw, 13px)/1.3 "SF Mono", "Menlo", "Consolas", monospace;
-  text-align: center;
-}
-
-#mail-pop h2 {
-  margin: 0 0 28px;
-  font: 400 clamp(22px, 2.8vw, 34px)/1.1 "PP Editorial New", serif;
-  text-align: center;
-}
-
-#mail-row {
-  --bar: var(--btn);
-  --knob: var(--btn);
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 78%;
-  height: var(--knob);
-}
-
-#mail-input {
-  box-sizing: border-box;
-  width: 100%;
-  height: var(--bar);
-  padding: 0 calc(var(--knob) + 10px) 0 16px;
-  border: none;
-  border-radius: 999px;
-  background: #d3d3d3;
-  color: #111111;
-  font: clamp(10px, 1vw, 12px)/1 "SF Mono", "Menlo", "Consolas", monospace;
-  outline: none;
-}
-
-#mail-input::placeholder {
-  color: #111111;
-}
-
-#mail-send {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  width: var(--knob);
-  height: var(--knob);
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  transform: translateY(-50%);
-  background: #ff0000;
-  color: #ffffff;
-  font: 400 clamp(12px, 1.2vw, 15px)/1 "PP Editorial New", serif;
-  cursor: pointer;
-  transition: transform 0.16s ease, background-color 0.16s ease, color 0.16s ease;
-}
-
-#mail-send:hover {
-  transform: translateY(-50%) scale(1.12);
-  background: #ffffff;
-  color: #ff0000;
-}
-
-#mail-send:disabled {
-  opacity: 0.55;
-  cursor: wait;
-}
-
-#mail-send:disabled:hover {
-  transform: translateY(-50%);
-  background: #ff0000;
-  color: #ffffff;
-}
-
 #toast {
   position: fixed;
   left: 50%;
@@ -600,6 +399,7 @@ body.archive-open #site-title {
 body.archive-open #site-title h1,
 body.archive-open #site-title #site-subtitle {
   color: #ff0000;
+  cursor: pointer;
 }
 
 body.archive-open #site-title:hover h1,
@@ -714,25 +514,6 @@ body.archive-open #site-title:hover #site-subtitle {
   .knob-row label {
     flex-basis: 65px;
     font-size: 13px;
-  }
-
-  #mail-pop {
-    top: 50%;
-    left: 50%;
-    right: auto;
-    bottom: auto;
-    width: min(360px, calc(100vw - 32px));
-    max-width: calc(100vw - 32px);
-    padding: 28px 22px 32px;
-    transform: translate(-50%, -50%);
-  }
-
-  #mail-row {
-    width: 92%;
-  }
-
-  #mail-input {
-    font-size: 11px;
   }
 }
 

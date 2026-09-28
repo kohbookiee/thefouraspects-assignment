@@ -59,11 +59,7 @@ const archiveEmpty = document.getElementById("archive-empty");
 const siteSubtitle = document.getElementById("site-subtitle");
 const SUBTITLE_MAIN = "The Four Aspects";
 const toast = document.getElementById("toast");
-const mailPop = document.getElementById("mail-pop");
-const mailInput = document.getElementById("mail-input");
-const mailSend = document.getElementById("mail-send");
 const loadingEl = document.getElementById("loading");
-let mailRecord = null;
 const ARCHIVE_KEY = "faceJudgmentArchive";
 const ARCHIVE_GEN = "archive-v4";
 if (localStorage.getItem("faceJudgmentArchiveGen") !== ARCHIVE_GEN) {
@@ -590,47 +586,18 @@ archiveOpenButton.addEventListener("click", () => {
   else showBuilder();
 });
 const siteTitle = document.getElementById("site-title");
-const aboutPop = document.getElementById("about-pop");
-const aboutCard = document.getElementById("about-card");
-
-const aboutClose = document.getElementById("about-close");
-
-function showAbout() {
-  if (document.body.classList.contains("archive-open")) return;
-  document.body.classList.add("about-open");
-  if (aboutPop) aboutPop.hidden = false;
-}
-
-function hideAbout() {
-  document.body.classList.remove("about-open");
-  if (aboutPop) aboutPop.hidden = true;
-}
 
 if (siteTitle) {
-  siteTitle.addEventListener("click", (event) => {
-    if (document.body.classList.contains("archive-open")) {
-      showBuilder();
-      return;
-    }
-    event.preventDefault();
-    if (document.body.classList.contains("about-open")) hideAbout();
-    else showAbout();
+  siteTitle.addEventListener("click", () => {
+    if (document.body.classList.contains("archive-open")) showBuilder();
   });
 }
-if (aboutClose) aboutClose.addEventListener("click", (event) => {
-  event.stopPropagation();
-  hideAbout();
-});
 window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") hideAbout();
+  if (event.key === "Escape" && document.body.classList.contains("archive-open")) showBuilder();
 });
 if (archiveView) {
   archiveView.addEventListener("click", (event) => {
     if (event.target.closest(".archive-card")) return;
-    if (mailPop && !mailPop.hidden) {
-      hideMailPop();
-      return;
-    }
     showBuilder();
   });
 }
@@ -993,18 +960,10 @@ function renderArchive() {
     });
     card.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (card.classList.contains("is-selected")) {
-        hideMailPop();
-        return;
-      }
-      showMailPop(record, card);
-      card.classList.add("is-hover");
-      img.src = photo;
     });
     archiveGrid.append(card);
   });
   requestAnimationFrame(fitArchiveCaptions);
-  hideMailPop();
 }
 
 async function ensurePlanImages(record) {
@@ -1025,162 +984,7 @@ function pngFileName(record) {
   return `${code.replace(/[/\\?%*:|"<>]/g, "")}.png`;
 }
 
-function mailPngFileName(record) {
-  const name = pngFileName(record).replace(/[^A-Za-z0-9._-]+/g, "-").replace(/-+/g, "-");
-  return name.replace(/^-|-$/g, "") || "friend.png";
-}
-
-async function downloadArchivePng(record) {
-  await ensurePlanImages(record);
-  await new Promise((resolve) => {
-    planCanvas(record).toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = pngFileName(record);
-      document.body.append(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      resolve();
-    }, "image/png");
-  });
-}
-
-function planBlob(record) {
-  return new Promise((resolve) => {
-    planCanvas(record).toBlob((blob) => resolve(blob), "image/png");
-  });
-}
-
-async function recordPngFile(record) {
-  if (record.planImage && record.planImage.startsWith("data:")) {
-    const blob = await (await fetch(record.planImage)).blob();
-    return new File([blob], mailPngFileName(record), { type: "image/png" });
-  }
-  const blob = (await planBlob(record)) || new Blob([], { type: "image/png" });
-  return new File([blob], mailPngFileName(record), { type: "image/png" });
-}
-
-function mailFieldMap(record, photoUrl = "") {
-  const code = record.judgmentCode || "";
-  const lines = [`Here is your new friend.`, code];
-  if (photoUrl) lines.push("", "Photo:", photoUrl);
-  return {
-    _subject: `Your new friend ${code}`,
-    _template: "box",
-    name: "四面觀相體",
-    judgmentCode: code,
-    photoUrl,
-    message: lines.join("\n"),
-  };
-}
-
-async function uploadMailPhoto(file) {
-  const body = new FormData();
-  body.append("file", file);
-  body.append("expire", "172800");
-  const response = await fetch("https://tmpfiles.org/api/v1/upload?expire=172800", {
-    method: "POST",
-    body,
-  });
-  if (!response.ok) throw new Error("upload");
-  const result = await response.json();
-  const url = result?.data?.url;
-  if (!url || result.status !== "success") throw new Error("upload");
-  const href = String(url);
-  if (href.includes("tmpfiles.org/dl/")) return href;
-  return href.replace("tmpfiles.org/", "tmpfiles.org/dl/");
-}
-
-async function postFormSubmit(email, fields, file) {
-  const body = new FormData();
-  Object.entries(fields).forEach(([name, value]) => {
-    if (value) body.append(name, value);
-  });
-  if (file) body.append("attachment", file, file.name);
-  const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
-    method: "POST",
-    headers: { Accept: "application/json" },
-    body,
-  });
-  if (!response.ok) throw new Error("network");
-  const result = await response.json();
-  if (result.success === false || result.success === "false") {
-    throw new Error(result.message || "fail");
-  }
-}
-
-async function sendRecordToEmail(email, record) {
-  if (!record) throw new Error("no save");
-  await ensurePlanImages(record);
-  const file = await recordPngFile(record);
-  let photoUrl = "";
-  try {
-    photoUrl = await uploadMailPhoto(file);
-  } catch (error) {
-    photoUrl = "";
-  }
-  const fields = mailFieldMap(record, photoUrl);
-  try {
-    await postFormSubmit(email, fields, file);
-  } catch (error) {
-    if (!photoUrl) throw error;
-    await postFormSubmit(email, fields, null);
-  }
-}
-
-if (mailPop) {
-  mailPop.addEventListener("click", (event) => event.stopPropagation());
-  mailPop.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const email = (mailInput && mailInput.value.trim()) || "";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      flashSaved("ENTER A VALID E-MAIL");
-      return;
-    }
-    if (mailSend) mailSend.disabled = true;
-    try {
-      await sendRecordToEmail(email, mailRecord || readArchive()[0]);
-      flashSaved("SENT TO YOUR E-MAIL");
-      mailInput.value = "";
-    } catch (error) {
-      flashSaved("CHECK INBOX TO CONFIRM, OR TRY AGAIN");
-    } finally {
-      if (mailSend) mailSend.disabled = false;
-    }
-  });
-}
-
-function clearArchiveSelection() {
-  if (!archiveGrid) return;
-  archiveGrid.querySelectorAll(".archive-card.is-selected").forEach((card) => {
-    card.classList.remove("is-selected");
-    if (!card.matches(":hover")) {
-      card.classList.remove("is-hover");
-      const img = card.querySelector("img");
-      if (img && img.dataset.outline) img.src = img.dataset.outline;
-    }
-  });
-}
-
-function showMailPop(record, card) {
-  mailRecord = record || null;
-  if (!mailPop || !mailRecord) return;
-  clearArchiveSelection();
-  if (card) card.classList.add("is-selected");
-  mailPop.hidden = false;
-}
-
-function hideMailPop() {
-  mailRecord = null;
-  clearArchiveSelection();
-  if (mailPop) mailPop.hidden = true;
-}
-
 function showArchive() {
-  hideAbout();
   renderArchive();
   archiveView.hidden = false;
   document.body.classList.add("archive-open");
@@ -1191,7 +995,6 @@ function showBuilder() {
   archiveView.hidden = true;
   document.body.classList.remove("archive-open");
   if (siteSubtitle) siteSubtitle.textContent = SUBTITLE_MAIN;
-  hideMailPop();
 }
 
 function flashSaved(message = "SAVED TO ARCHIVE") {
